@@ -5,13 +5,12 @@
   "main": "dist/zlink.cjs.js",
   "module": "dist/zlink.esm.js",
   "browser": "dist/zlink.umd.js",
-  "type": "module",
   "files": [
     "src",
     "dist/*.js"
   ],
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c --bundleConfigAsCjs",
     "test": "test"
   },
   "repository": {
@@ -30,5 +29,8 @@
     "rollup": "^4.9.6",
     "rollup-plugin-node-resolve": "^5.2.0",
     "tslib": "^2.6.2"
+  },
+  "bin": {
+    "zlink": "./dist/zlink.cjs.js"
   }
 }
