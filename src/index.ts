@@ -131,19 +131,3 @@ function watchFolder(folderPath: string) {
     });
 }
 watchFolder(TARGET_PACKAGE_PATH);
-
-// const folderPath = '/Users/xuzhi/michael/RNSDK/nearby-rn/LocalLifeDatePicker';
-// fs.watch(folderPath, (eventType, filename) => {
-//     const filePath = path.join(folderPath, filename);
-
-//     if (eventType === 'rename') {
-//         // 文件创建
-//         console.log(`File created: ${filePath}`);
-//     } else if (eventType === 'change') {
-//         // 文件修改
-//         console.log(`File changed: ${filePath}`);
-//     } else if (eventType === 'unlink') {
-//         // 文件删除
-//         console.log(`File deleted: ${filePath}`);
-//     }
-// });
