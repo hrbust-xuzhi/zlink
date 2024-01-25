@@ -1,5 +1,5 @@
 {
-  "name": "@xuzhi01/zlink",
+  "name": "krn-xzlink",
   "version": "0.0.2",
   "description": "KRN link工具",
   "main": "dist/zlink.cjs.js",
