@@ -1,6 +1,6 @@
 {
   "name": "krn-xzlink",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "KRN link工具",
   "main": "dist/zlink.cjs.js",
   "module": "dist/zlink.esm.js",
