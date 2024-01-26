@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { removeDir } from "./utils";
 const fs = require('fs');
 const path = require('path');
 
@@ -73,6 +74,16 @@ const DEPENDENCY_PACKAGE_PATH = getDependencyPackagePath(
     TARGET_PACKAGE_PATH,
 );
 
+// 获取文件位置
+function getFilePath(folerPath: string, filePath: string): string {
+    try {
+        const result = fs.statSync(folerPath).isDirectory() ?  path.join(folerPath, filePath) : folerPath;
+        return result;
+    } catch  {
+        return folerPath;
+    }
+}
+
 // 监听文件
 function watchFolder(folderPath: string) {
     // 获取文件夹中的所有文件和子文件夹
@@ -95,7 +106,7 @@ function watchFolder(folderPath: string) {
         // 如果是文件，则设置监听器
         //@ts-ignore
         fs.watch(filePath, (event, filename) => {
-            const targetFilePath = path.join(filePath, filename);
+            const targetFilePath = getFilePath(filePath, filename);
             const relativePath = path.relative(
                 TARGET_PACKAGE_PATH,
                 targetFilePath,
@@ -106,7 +117,7 @@ function watchFolder(folderPath: string) {
             );
             // 删除文件夹、删除文件
             if (!fs.existsSync(targetFilePath)) {
-                fs.unlink(dependencyFilePath, () => {});
+                removeDir(dependencyFilePath);
             } else {
                 console.log(`File ${targetFilePath} changed!`);
                 // 创建文件夹、创建文件、更改文件

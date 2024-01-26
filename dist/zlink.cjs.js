@@ -1,6 +1,32 @@
 #!/usr/bin/env node
 'use strict';
 
+var fs$1 = require('fs');
+var path$1 = require('path');
+/**
+ * 删除文件夹 or 文件
+ */
+function removeDir(dir) {
+    if (fs$1.statSync(dir).isFile()) {
+        fs$1.unlinkSync(dir);
+        return;
+    }
+    var files = fs$1.readdirSync(dir);
+    for (var i = 0; i < files.length; i++) {
+        var newPath = path$1.join(dir, files[i]);
+        var stat = fs$1.statSync(newPath);
+        if (stat.isDirectory()) {
+            //如果是文件夹就递归下去
+            removeDir(newPath);
+        }
+        else {
+            //删除文件
+            fs$1.unlinkSync(newPath);
+        }
+    }
+    fs$1.rmdirSync(dir); //如果文件夹是空的，就将自己删除掉
+}
+
 var fs = require('fs');
 var path = require('path');
 // 复制文件
@@ -66,6 +92,16 @@ var args = parseArgs();
 var TARGET_PACKAGE_PATH = Object.values(args)[0];
 // 项目中三方库路径
 var DEPENDENCY_PACKAGE_PATH = getDependencyPackagePath(process.cwd(), TARGET_PACKAGE_PATH);
+// 获取文件位置
+function getFilePath(folerPath, filePath) {
+    try {
+        var result = fs.statSync(folerPath).isDirectory() ? path.join(folerPath, filePath) : folerPath;
+        return result;
+    }
+    catch (_a) {
+        return folerPath;
+    }
+}
 // 监听文件
 function watchFolder(folderPath) {
     // 获取文件夹中的所有文件和子文件夹
@@ -84,12 +120,12 @@ function watchFolder(folderPath) {
         // 如果是文件，则设置监听器
         //@ts-ignore
         fs.watch(filePath, function (event, filename) {
-            var targetFilePath = path.join(filePath, filename);
+            var targetFilePath = getFilePath(filePath, filename);
             var relativePath = path.relative(TARGET_PACKAGE_PATH, targetFilePath);
             var dependencyFilePath = path.join(DEPENDENCY_PACKAGE_PATH, relativePath);
             // 删除文件夹、删除文件
             if (!fs.existsSync(targetFilePath)) {
-                fs.unlink(dependencyFilePath, function () { });
+                removeDir(dependencyFilePath);
             }
             else {
                 console.log("File ".concat(targetFilePath, " changed!"));
