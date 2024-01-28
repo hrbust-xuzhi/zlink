@@ -1,112 +1,46 @@
 #!/usr/bin/env node
-import { removeDir } from "./utils";
-const fs = require('fs');
-const path = require('path');
-
-// 复制文件
-function copyFile(sourceFilePath: string, targetFilePath: string) {
-    //@ts-ignore
-    fs.readFile(sourceFilePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error(`Error reading source file: ${err.message}`);
-            return;
-        }
-        // 如果文件路径不存在，就创建改路径
-        if (!fs.existsSync(targetFilePath)) {
-            const folderPath = path.join(targetFilePath, '..');
-            fs.mkdirSync(folderPath, { recursive: true });
-        }
-        // 将读取到的内容写入目标文件
-        //@ts-ignore
-        fs.writeFile(targetFilePath, data, 'utf8', (err) => {
-            if (err) {
-                console.error(`Error writing to target file: ${err.message}`);
-                return;
-            }
-            console.error(
-                `File content copied from ${sourceFilePath} to ${targetFilePath}`,
-            );
-        });
-    });
-}
-// 解析cli参数
-function parseArgs() {
-    // 获取命令行参数
-    const args = process.argv.slice(2);
-
-    // 解析命令行参数
-    const options: {
-        [key: string]: any;
-    } = {};
-    args?.forEach((arg) => {
-        if (arg.startsWith('--')) {
-            // 长参数，例如 --name=value
-            const [name, value] = arg.slice(2).split('=');
-            options[name] = value;
-        } else if (arg.startsWith('-')) {
-            // 短参数，例如 -n value
-            const [name, value] = arg.slice(1).split('=');
-            options[name] = value;
-        } else {
-            // 没有参数名，例如 value
-            options[arg] = arg;
-        }
-    });
-    return Object.keys(options).length > 0 ? options : {};
-}
-
-// 获取依赖包具体位置
-function getDependencyPackagePath(projPath = process.cwd(), packagePath = '.') {
-    const packageJson = JSON.parse(
-        fs.readFileSync(path.join(packagePath, 'package.json'), 'utf-8') ??
-            '{}',
-    );
-    const packageName = packageJson?.name;
-    const dependencyPackage = path.join(projPath, 'node_modules', packageName);
-    return dependencyPackage;
-}
-const args = parseArgs();
+import fs from 'fs';
+import path from 'path';
+import { args, copyFile, deleteFileAndFolder, copyFolderSync, getDependencyPackagePath } from "./utils/index";
+import { joinFilePath } from './utils/joinFilePath';
 // link三方库绝对路径
-const TARGET_PACKAGE_PATH = Object.values(args)[0];
+const TARGET_PACKAGE_PATH: string = Object.values(args)[0];
 // 项目中三方库路径
 const DEPENDENCY_PACKAGE_PATH = getDependencyPackagePath(
     process.cwd(),
     TARGET_PACKAGE_PATH,
 );
 
-// 获取文件位置
-function getFilePath(folerPath: string, filePath: string): string {
-    try {
-        const result = fs.statSync(folerPath).isDirectory() ?  path.join(folerPath, filePath) : folerPath;
-        return result;
-    } catch  {
-        return folerPath;
-    }
-}
-
 // 监听文件
-function watchFolder(folderPath: string) {
+export function watchFolder(folderPath: string, includesSelf: boolean = false) {
     // 获取文件夹中的所有文件和子文件夹
     const files = fs.readdirSync(folderPath);
+    if (includesSelf) {
+        files.push('.');
+    }
 
     // 设置监听器
     files.forEach((file: string) => {
-        const filePath = path.join(folderPath, file);
+        const fileOrFolderPath = path.join(folderPath, file);
+
+        if (fs.statSync(fileOrFolderPath).isFile()) {
+            return ;
+        }
 
         // 检查文件的类型，如果是文件夹，则递归调用 watchFolder
-        if (fs.statSync(filePath).isDirectory()) {
+        if (fs.statSync(fileOrFolderPath).isDirectory()) {
             if (
-                filePath.includes('node_modules') ||
-                filePath.includes('/.git')
+                fileOrFolderPath.includes('node_modules') ||
+                fileOrFolderPath.includes('/.git')
             ) {
                 return;
             }
-            watchFolder(filePath);
+            watchFolder(fileOrFolderPath);
         }
-        // 如果是文件，则设置监听器
-        //@ts-ignore
-        fs.watch(filePath, (event, filename) => {
-            const targetFilePath = getFilePath(filePath, filename);
+        
+        // 监听文件和文件夹
+        fs.watch(fileOrFolderPath, (event, filename) => {
+            const targetFilePath = joinFilePath(fileOrFolderPath, filename);
             const relativePath = path.relative(
                 TARGET_PACKAGE_PATH,
                 targetFilePath,
@@ -117,11 +51,10 @@ function watchFolder(folderPath: string) {
             );
             // 删除文件夹、删除文件
             if (!fs.existsSync(targetFilePath)) {
-                removeDir(dependencyFilePath);
+                deleteFileAndFolder(dependencyFilePath);
             } else {
                 console.log(`File ${targetFilePath} changed!`);
                 // 创建文件夹、创建文件、更改文件
-                //@ts-ignore
                 fs.stat(targetFilePath, (err, stats) => {
                     if (err) {
                         return;
@@ -130,7 +63,11 @@ function watchFolder(folderPath: string) {
                         fs.mkdir(
                             dependencyFilePath,
                             { recursive: true },
-                            () => {},
+                            (err) => {
+                                if (!err) {
+                                    watchFolder(targetFilePath, true);
+                                }
+                            },
                         );
                     }
                     if (stats.isFile()) {
@@ -139,7 +76,8 @@ function watchFolder(folderPath: string) {
                 });
             }
         });
-        console.log(`\x1b[32m Watching file changes in ${filePath} \x1b[0m`);
+        console.log(`\x1b[32m Watching file changes in ${fileOrFolderPath} \x1b[0m`);
     });
 }
+copyFolderSync(TARGET_PACKAGE_PATH, DEPENDENCY_PACKAGE_PATH);
 watchFolder(TARGET_PACKAGE_PATH);
