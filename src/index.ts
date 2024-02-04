@@ -31,7 +31,7 @@ export function watchFolder(folderPath: string, includesSelf: boolean = false) {
         if (fs.statSync(fileOrFolderPath).isDirectory()) {
             if (
                 fileOrFolderPath.includes('node_modules') ||
-                file.startsWith('.')
+                fileOrFolderPath.includes('/.')
             ) {
                 return;
             }

@@ -152,7 +152,7 @@ function watchFolder(folderPath, includesSelf) {
         // 检查文件的类型，如果是文件夹，则递归调用 watchFolder
         if (fs$3.statSync(fileOrFolderPath).isDirectory()) {
             if (fileOrFolderPath.includes('node_modules') ||
-                file.startsWith('.')) {
+                fileOrFolderPath.includes('/.')) {
                 return;
             }
             watchFolder(fileOrFolderPath);
