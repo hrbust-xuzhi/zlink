@@ -31,7 +31,7 @@ export function watchFolder(folderPath: string, includesSelf: boolean = false) {
         if (fs.statSync(fileOrFolderPath).isDirectory()) {
             if (
                 fileOrFolderPath.includes('node_modules') ||
-                fileOrFolderPath.includes('/.git')
+                file.startsWith('.')
             ) {
                 return;
             }
@@ -40,6 +40,9 @@ export function watchFolder(folderPath: string, includesSelf: boolean = false) {
         
         // 监听文件和文件夹
         fs.watch(fileOrFolderPath, (event, filename) => {
+            if (filename?.startsWith('.')) {
+                return ;
+            }
             const targetFilePath = joinFilePath(fileOrFolderPath, filename);
             const relativePath = path.relative(
                 TARGET_PACKAGE_PATH,

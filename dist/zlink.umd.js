@@ -61,7 +61,7 @@
             var files = fs$3.readdirSync(source);
             // 遍历源文件夹中的每个文件和子文件夹
             files.forEach(function (file) {
-                if (file.includes('node_modules')) {
+                if (file.includes('node_modules') || file.startsWith('.')) {
                     return;
                 }
                 var sourcePath = path$3.join(source, file);
@@ -152,13 +152,16 @@
             // 检查文件的类型，如果是文件夹，则递归调用 watchFolder
             if (fs$3.statSync(fileOrFolderPath).isDirectory()) {
                 if (fileOrFolderPath.includes('node_modules') ||
-                    fileOrFolderPath.includes('/.git')) {
+                    file.startsWith('.')) {
                     return;
                 }
                 watchFolder(fileOrFolderPath);
             }
             // 监听文件和文件夹
             fs$3.watch(fileOrFolderPath, function (event, filename) {
+                if (filename === null || filename === void 0 ? void 0 : filename.startsWith('.')) {
+                    return;
+                }
                 var targetFilePath = joinFilePath(fileOrFolderPath, filename);
                 var relativePath = path$3.relative(TARGET_PACKAGE_PATH, targetFilePath);
                 var dependencyFilePath = path$3.join(DEPENDENCY_PACKAGE_PATH, relativePath);
