@@ -9,7 +9,7 @@ export function copyFolderSync(source: string, target: string,) {
 
         // 遍历源文件夹中的每个文件和子文件夹
         files.forEach(file => {
-            if (file.includes('node_modules') || file.startsWith('.')) {
+            if (file.includes('node_modules')) {
                 return ;
             }
             const sourcePath = path.join(source, file);

@@ -59,7 +59,7 @@ function copyFolderSync(source, target) {
         var files = fs$3.readdirSync(source);
         // 遍历源文件夹中的每个文件和子文件夹
         files.forEach(function (file) {
-            if (file.includes('node_modules') || file.startsWith('.')) {
+            if (file.includes('node_modules')) {
                 return;
             }
             var sourcePath = path$3.join(source, file);
