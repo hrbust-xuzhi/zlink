@@ -54,7 +54,7 @@ export function watchFolder(folderPath: string, includesSelf: boolean = false) {
             );
             // 删除文件夹、删除文件
             if (!fs.existsSync(targetFilePath)) {
-                deleteFileAndFolder(dependencyFilePath);
+                fs.existsSync(dependencyFilePath) && deleteFileAndFolder(dependencyFilePath);
             } else {
                 console.log(`File ${targetFilePath} changed!`);
                 // 创建文件夹、创建文件、更改文件
