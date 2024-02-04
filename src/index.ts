@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { args, copyFile, deleteFileAndFolder, copyFolderSync, getDependencyPackagePath } from "./utils/index";
 import { joinFilePath } from './utils/joinFilePath';
+import { watchRegistry } from './utils/watchRegistry';
 // link三方库绝对路径
 const TARGET_PACKAGE_PATH: string = Object.values(args)[0];
 // 项目中三方库路径
@@ -39,7 +40,7 @@ export function watchFolder(folderPath: string, includesSelf: boolean = false) {
         }
         
         // 监听文件和文件夹
-        fs.watch(fileOrFolderPath, (event, filename) => {
+        const watcher = fs.watch(fileOrFolderPath, (event, filename) => {
             if (filename?.startsWith('.')) {
                 return ;
             }
@@ -79,6 +80,7 @@ export function watchFolder(folderPath: string, includesSelf: boolean = false) {
                 });
             }
         });
+        watchRegistry.registerWatch(fileOrFolderPath, watcher);
         console.log(`\x1b[32m Watching file changes in ${fileOrFolderPath} \x1b[0m`);
     });
 }

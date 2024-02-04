@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { watchRegistry } from './watchRegistry';
 /**
  * 删除文件和文件夹
  */
@@ -32,6 +33,7 @@ export function deleteFileAndFolder(dir: string): void {
             });
             fs.rmdirSync(dir); //如果文件夹是空的，就将自己删除掉
             console.log(`Delete Direction ${dir}`);
+            watchRegistry.deleteWatch(dir);
         }
     } catch {
         console.log('\x1b[31m${dir} delete failed! \x1b[0m');

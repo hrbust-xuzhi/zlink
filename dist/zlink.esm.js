@@ -26,6 +26,24 @@ function copyFile(sourceFilePath, targetFilePath) {
     });
 }
 
+var WatchRegistry = /** @class */ (function () {
+    function WatchRegistry() {
+        this.pathWatchMap = {};
+    }
+    WatchRegistry.prototype.registerWatch = function (path, watch) {
+        this.deleteWatch(path);
+        this.pathWatchMap[path] = watch;
+    };
+    WatchRegistry.prototype.deleteWatch = function (path) {
+        var lastWatch = this.pathWatchMap[path];
+        if (typeof (lastWatch === null || lastWatch === void 0 ? void 0 : lastWatch.close) === 'function') {
+            lastWatch.close();
+        }
+    };
+    return WatchRegistry;
+}());
+var watchRegistry = new WatchRegistry();
+
 /**
  * 删除文件和文件夹
  */
@@ -59,6 +77,7 @@ function deleteFileAndFolder(dir) {
             });
             fs$2.rmdirSync(dir); //如果文件夹是空的，就将自己删除掉
             console.log("Delete Direction ".concat(dir));
+            watchRegistry.deleteWatch(dir);
         }
     }
     catch (_a) {
@@ -170,7 +189,7 @@ function watchFolder(folderPath, includesSelf) {
             watchFolder(fileOrFolderPath);
         }
         // 监听文件和文件夹
-        fs$2.watch(fileOrFolderPath, function (event, filename) {
+        var watcher = fs$2.watch(fileOrFolderPath, function (event, filename) {
             if (filename === null || filename === void 0 ? void 0 : filename.startsWith('.')) {
                 return;
             }
@@ -201,6 +220,7 @@ function watchFolder(folderPath, includesSelf) {
                 });
             }
         });
+        watchRegistry.registerWatch(fileOrFolderPath, watcher);
         console.log("\u001B[32m Watching file changes in ".concat(fileOrFolderPath, " \u001B[0m"));
     });
 }
